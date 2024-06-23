@@ -7,21 +7,41 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
         .level-baik {
-            background-color: #B4DD68; /* green */
+            background-color: #B4DD68;
         }
-        
         .level-sedang {
-            background-color: #f7dc6f; /* yellow */
+            background-color: #F2D659;
         }
-        .level-buruk{
-            background-color: #e74c3c; /* red */
+        .level-tidak-sehat{
+            background-color: #EBA05E;
         }
+        .level-sangat-tidak-sehat{
+            background-color: #E5756C;
+        }
+        .level-berbahaya{
+            background-color: #966D7B;
+        }
+
         .btn.submit-btn:hover{
             background-color: #0088be !important;
         }
         .btn.reset-btn:hover{
             background-color: #00A0E0;
             color: white !important;
+        }
+
+        @media (min-width: 768px) {
+            .custom-rounded {
+                border-top-left-radius: 1rem;
+                border-bottom-left-radius: 1rem;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .custom-rounded {
+                border-top-left-radius: 1rem;
+                border-top-right-radius: 1rem;
+            }
         }
     </style>
 </head>
@@ -30,7 +50,7 @@
         <div class="rounded-4 mt-5 mx-auto" style="box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);">
             <div class="row g-0">
                 <div class="col-md-5">
-                    <div class="d-flex flex-column justify-content-between p-5 rounded-start-4" style="background-image: url('blue-city.jpg'); background-size: cover; background-position: center; height: 100%;">
+                    <div class="d-flex flex-column justify-content-between p-4 p-sm-5 custom-rounded" style="background-image: url('blue-city.jpg'); background-size: cover; background-position: center; height: 100%;">
                         <h2 class="fw-bold text-white">AIR <br> QUALITY <br> PREDICTION</h2>
                         <p class="m-0 fw-semibold text-white">Group 1</p>
                     </div>
@@ -39,7 +59,7 @@
                     <h4 class="mx-auto my-3 text-center" style="max-width: 350px;">Enter the following values to predict air quality</h4>
                     <form action="">
                         <div class="row mb-2">
-                            <div class="col">
+                            <div class="col-12 col-sm mb-2 mb-sm">
                                 <label for="inputpm10" class="form-label">PM10</label>
                                 <input type="text" class="form-control bg-secondary-subtle border-0" id="inputpm10" placeholder="Enter a value between 0-500">
                             </div>
@@ -50,7 +70,7 @@
                         </div>
     
                         <div class="row mb-2">
-                            <div class="col">
+                            <div class="col-12 col-sm mb-2 mb-sm">
                                 <label for="inputso2" class="form-label">SO2</label>
                                 <input type="text" class="form-control bg-secondary-subtle border-0" id="inputso2" placeholder="Enter a value between 0-500">
                             </div>
@@ -61,7 +81,7 @@
                         </div>
     
                         <div class="row">
-                            <div class="col">
+                            <div class="col-12 col-sm mb-2 mb-sm">
                                 <label for="inputo3" class="form-label">O3</label>
                                 <input type="text" class="form-control bg-secondary-subtle border-0" id="inputo3" placeholder="Enter a value between 0-500">
                             </div>
@@ -79,14 +99,14 @@
                     <h5 class="mt-3 mb-0">Prediction Results:</h5>
                     <div class="container mt-2 p-0">
                         <div class="card">
-                            <div class="card-header p-3" style="background-color: #B4DD68;">
-                                <h5 class="card-title m-0 text-black-50">Level: <span class="fw-bold">{{ level }}</span></h5>
+                            <div class="card-header p-3" id="result-card-header">
+                                <h5 class="card-title m-0 text-black-50">Level: <span class="fw-bold" id="level-text">-</span></h5>
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title m-0">Information</h5>
-                                <p class="card-text">The air quality level is very good, has no negative effects on humans, animals and plants.</p>
+                                <p class="card-text" id="level-description">-</p>
                                 <h5 class="card-title m-0">Recommendations for you</h5>
-                                <p class="card-text">-</p>
+                                <p class="card-text" id="level-recommendation">-</p>
                             </div>
                         </div>
                     </div>
@@ -99,26 +119,76 @@
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
     <script>
-        var level = "SEDANG"; // replace with the actual level value
-        var levelDescription = "no negative"; // replace with the actual level description
+        var levels = ["BAIK", "SEDANG", "TIDAK SEHAT", "SANGAT TIDAK SEHAT", "BERBAHAYA"]
+        var result = levels[1]; // Output model masuk sini
 
-        function getLevelClass(level) {
-        switch (level) {
-            case "BAIK":
-                levelClass = "level-baik";
-                break;
-            case "SEDANG":
-                levelClass = "level-sedang";
-                break;
-            case "TIDAK SEHAT":
-                levelClass = "level-buruk";
-                break;
-            default:
-                levelClass = "";
+        function getLevel(result) {
+            switch (result) {
+                case "BAIK":
+                    return { 
+                        name: "Good", 
+                        class: "level-baik", 
+                        desc:  "The air quality level is very good, has no negative effects on humans, animals and plants.", 
+                        recom: "-" 
+                    };
+                    break;
+                case "SEDANG":
+                    return { 
+                        name: "Medium", 
+                        class: "level-sedang", 
+                        desc: "Air quality levels are still acceptable for human, animal and plant health.", 
+                        recom: "People with vulnerable physical conditions should reduce outdoor activities and/or work hard." 
+                    };
+                    break;
+                case "TIDAK SEHAT":
+                    return { 
+                        name: "Unhealthy", 
+                        class: "level-tidak-sehat", 
+                        desc: "Air quality levels that are detrimental to humans, animals and plants.", 
+                        recom: "-" 
+                    };
+                    break;
+                case "SANGAT TIDAK SEHAT":
+                    return { 
+                        name: "Very Unhealthy", 
+                        class: "level-sangat-tidak-sehat", 
+                        desc: "Air quality levels that can increase health risks in a number of exposed segments of the population.", 
+                        recom: "-" 
+                    };
+                    break;
+                case "BERBAHAYA":
+                    return { name: "Dangerous!", 
+                    class: "level-berbahaya", 
+                    desc: "Air quality levels that can seriously harm the health of the population and require immediate treatment.", 
+                    recom: "-" 
+                };
+                    break;
+                default:
+                    return { 
+                        name: "", 
+                        class: "", 
+                        desc: "", 
+                        recom: "" 
+                    };
+            }
         }
-    }
-        document.querySelector(".card-header").classList.add(levelClass);
+        
+        function updatePrediction() {
+            var level = getLevel(result);
+
+            document.getElementById("level-text").innerText = level.name;
+            document.getElementById("level-description").innerText = level.desc;
+            document.getElementById("level-recommendation").innerText = level.recom;
+
+            
+            var resultCardHeader = document.getElementById("result-card-header");
+            resultCardHeader.className = "card-header p-3 " + level.class;
+        }
+
+        document.addEventListener("DOMContentLoaded", updatePrediction);
     </script>
+
 </body>
 </html>
